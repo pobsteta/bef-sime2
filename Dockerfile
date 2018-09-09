@@ -18,26 +18,24 @@ MAINTAINER Pascal Obstetar <pascal.obstetar@bioecoforests.com>
 
 # ---------- DEBUT --------------
 
-# On évite les messages debconf
-ENV DEBIAN_FRONTEND noninteractive
-
-# Ajoute gosub pour faciliter les actions en root
-ENV GOSU_VERSION 1.10
-RUN set -x \
-	&& apt-get update && apt-get install -y --no-install-recommends ca-certificates wget && rm -rf /var/lib/apt/lists/* \
-	&& wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture)" \
-	&& wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture).asc" \
-	&& export GNUPGHOME="$(mktemp -d)" \
-	&& gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
-	&& gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \
-	&& rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc \
-	&& chmod +x /usr/local/bin/gosu \
-	&& gosu nobody true \
-	&& apt-get purge -y --auto-remove ca-certificates
-
 # version de tryton
 ENV SERIES 4.8
 ENV LANG C.UTF-8
+
+# On évite les messages debconf
+RUN  export DEBIAN_FRONTEND=noninteractive
+ENV  DEBIAN_FRONTEND noninteractive
+RUN  dpkg-divert --local --rename --add /sbin/initctl
+
+RUN apt-get -y update; apt-get -y install gnupg2 wget ca-certificates rpl pwgen software-properties-common
+
+# On ajoute le dépôt QGIS
+RUN sh -c 'echo "deb http://qgis.org/debian stretch main" > /etc/apt/sources.list.d/qgis.list'
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-key CAEB3DC3BDF7FB45
+
+# On ajoute le dépôt R
+RUN sh -c 'echo "deb http://cran.irsn.fr/bin/linux/debian stretch-cran35/" > /etc/apt/sources.list.d/rcran.list'
+RUN apt-key adv --keyserver keys.gnupg.net --recv-key E19F5F87128899B192B1A2C2AD5F960A256A04AF
 	
 RUN groupadd -r trytond \
     && useradd --no-log-init -r -d /var/lib/trytond -m -g trytond trytond \
@@ -74,22 +72,7 @@ RUN apt-get update \
         python3-stdnum \
         python3-tz \
         python3-zeep \
-    && rm -rf /var/lib/apt/lists/*
-    
-# On ajoute le dépôt QGIS et R    
-RUN add-apt-repository ppa:ubuntugis/ubuntugis-unstable
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 314DF160
-    
-# On ajoute le dépôt QGIS
-#RUN echo "deb http://qgis.org/debian stretch main" > /etc/apt/sources.list.d/qgis.list
-#RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-key CAEB3DC3BDF7FB45
-
-# On ajoute le dépôt R
-#RUN echo "deb http://cran.irsn.fr/bin/linux/ubuntu bionic-cran35/" > /etc/apt/sources.list.d/rcran.list
-#RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
-
-# On met à jour
-RUN apt-get -y update    
+    && rm -rf /var/lib/apt/lists/*    
     
 RUN pip3 install --no-cache-dir trytond-gis  
 
@@ -100,7 +83,7 @@ RUN pip3 install --no-cache-dir \
         done \
     && pip3 install --no-cache-dir phonenumbers   
 
-# On installe les dépendances de PostgreSQL, R et QGIS
+# On installe les dépendances
 # Pour QGIS, R, Tryton
 RUN apt-get update && apt-get install --yes --force-yes git python3-gdal python3-rpy2 libgeos-dev apache2 qgis qgis-server libapache2-mod-fcgid && rm -rf /var/lib/apt/lists/*
 
