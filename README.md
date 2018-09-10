@@ -9,13 +9,19 @@ scalability and security.
 ## How to use this image
 
 ### Start a PostgreSQL/Postgis instance
+```
 $ docker run --name tryton-postgres -e POSTGRES_PASSWORD=tryton -e POSTGRES_DB=tryton -d pobsteta/bef-postgis
+```
 
 ### Setup the database
+```
 $ docker run --link tryton-postgres:postgres -it pobsteta/bef-sime2 trytond-admin -d tryton --all
+```
 
 ### Start a Tryton instance
+```
 $ docker run --name tryton -p 8000:8000 --link tryton-postgres:postgres -d pobsteta/bef-sime2
+```
 
 You can connect to Tryton using http://localhost:8000/
 
