@@ -9,7 +9,7 @@ scalability and security.
 ## How to use this image
 
 ### Start a PostgreSQL/Postgis instance
-$ docker run --name tryton-postgres -e POSTGRES_PASSWORD=tryton -e POSTGRES_DB=tryton -d kartoza/postgis:9.6-2.4
+$ docker run --name tryton-postgres -e POSTGRES_PASSWORD=tryton -e POSTGRES_DB=tryton -d pobsteta/bef-postgis
 
 ### Setup the database
 $ docker run --link tryton-postgres:postgres -it pobsteta/bef-sime2 trytond-admin -d tryton --all
